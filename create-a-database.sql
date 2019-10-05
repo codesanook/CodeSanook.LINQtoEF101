@@ -15,7 +15,7 @@ CREATE TABLE Badges (
 	Class tinyint NOT NULL,
 	TagBased bit NOT NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE CloseAsOffTopicReasonTypes (
 	Id smallint NOT NULL,
@@ -28,14 +28,14 @@ CREATE TABLE CloseAsOffTopicReasonTypes (
 	DeactivationDate datetime NULL,
 	DeactivationModeratorId int NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE CloseReasonTypes (
 	Id tinyint NOT NULL,
 	Name nvarchar(200) NOT NULL,
 	Description nvarchar(500) NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE Comments (
 	Id int NOT NULL,
@@ -46,14 +46,14 @@ CREATE TABLE Comments (
 	UserDisplayName nvarchar(30) NULL,
 	UserId int NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE FlagTypes (
 	Id tinyint NOT NULL,
 	Name nvarchar(50) NOT NULL,
 	Description nvarchar(500) NOT NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE PendingFlags (
 	Id int NOT NULL,
@@ -65,7 +65,7 @@ CREATE TABLE PendingFlags (
 	DuplicateOfQuestionId int NULL,
 	BelongsOnBaseHostAddress nvarchar(100) NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE PostFeedback (
 	Id int NOT NULL,
@@ -74,7 +74,7 @@ CREATE TABLE PostFeedback (
 	VoteTypeId tinyint NOT NULL,
 	CreationDate datetime NOT NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE PostHistory (
 	Id int NOT NULL,
@@ -87,13 +87,13 @@ CREATE TABLE PostHistory (
 	Comment nvarchar(400) NULL,
 	Text nvarchar(800) NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE PostHistoryTypes (
 	Id tinyint NOT NULL,
 	Name nvarchar(50) NOT NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE PostLinks (
 	Id int NOT NULL,
@@ -102,7 +102,7 @@ CREATE TABLE PostLinks (
 	RelatedPostId int NOT NULL,
 	LinkTypeId tinyint NOT NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE PostNoticeTypes (
 	Id int NOT NULL,
@@ -113,7 +113,7 @@ CREATE TABLE PostNoticeTypes (
 	Predefined bit NOT NULL,
 	PostNoticeDurationId int NOT NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE PostNotices (
 	Id int NOT NULL,
@@ -126,19 +126,19 @@ CREATE TABLE PostNotices (
 	OwnerUserId int NULL,
 	DeletionUserId int NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE PostTags (
 	PostId int NOT NULL,
 	TagId int NOT NULL,
 	PRIMARY KEY ( PostId, TagId)
-);             
+);       
 
 CREATE TABLE PostTypes (
 	Id tinyint NOT NULL,
 	Name nvarchar(50) NOT NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE Posts (
 	Id int NOT NULL,
@@ -164,7 +164,7 @@ CREATE TABLE Posts (
 	ClosedDate datetime NULL,
 	CommunityOwnedDate datetime NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE PostsWithDeleted (
 	Id int NOT NULL,
@@ -190,7 +190,7 @@ CREATE TABLE PostsWithDeleted (
 	ClosedDate datetime NULL,
 	CommunityOwnedDate datetime NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE ReviewRejectionReasons (
 	Id tinyint NOT NULL,
@@ -198,14 +198,14 @@ CREATE TABLE ReviewRejectionReasons (
 	Description nvarchar(300) NOT NULL,
 	PostTypeId tinyint NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE ReviewTaskResultTypes (
 	Id tinyint NOT NULL,
 	Name nvarchar(100) NOT NULL,
 	Description nvarchar(300) NOT NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE ReviewTaskResults (
 	Id int NOT NULL,
@@ -215,21 +215,21 @@ CREATE TABLE ReviewTaskResults (
 	RejectionReasonId tinyint NULL,
 	Comment nvarchar(150) NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE ReviewTaskStates (
 	Id tinyint NOT NULL,
 	Name nvarchar(50) NOT NULL,
 	Description nvarchar(300) NOT NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE ReviewTaskTypes (
 	Id tinyint NOT NULL,
 	Name nvarchar(50) NOT NULL,
 	Description nvarchar(300) NOT NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE ReviewTasks (
 	Id int NOT NULL,
@@ -241,7 +241,7 @@ CREATE TABLE ReviewTasks (
 	SuggestedEditId int NULL,
 	CompletedByReviewTaskId int NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE SuggestedEditVotes (
 	Id int NOT NULL,
@@ -252,7 +252,7 @@ CREATE TABLE SuggestedEditVotes (
 	TargetUserId int NULL,
 	TargetRepChange int NOT NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE SuggestedEdits (
 	Id int NOT NULL,
@@ -267,7 +267,7 @@ CREATE TABLE SuggestedEdits (
 	Tags nvarchar(250) NULL,
 	RevisionGUID uniqueidentifier NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE TagSynonyms (
 	Id int NOT NULL,
@@ -281,7 +281,7 @@ CREATE TABLE TagSynonyms (
 	ApprovedByUserId int NULL,
 	ApprovalDate datetime NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE Tags (
 	Id int NOT NULL,
@@ -290,7 +290,7 @@ CREATE TABLE Tags (
 	ExcerptPostId int NULL,
 	WikiPostId int NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE Users (
 	Id int NOT NULL,
@@ -308,13 +308,13 @@ CREATE TABLE Users (
 	EmailHash varchar(32) NULL,
 	AccountId int NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE VoteTypes (
 	Id tinyint NOT NULL,
 	Name nvarchar(50) NOT NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 CREATE TABLE Votes (
 	Id int NOT NULL,
@@ -324,7 +324,7 @@ CREATE TABLE Votes (
 	CreationDate datetime NULL,
 	BountyAmount int NULL,
 	PRIMARY KEY ( Id )
-);             
+);       
 
 ALTER TABLE PostsWithDeleted 
 ADD CONSTRAINT Fk_PostsWithDeleted_PostTypeId FOREIGN KEY ( PostTypeId ) 

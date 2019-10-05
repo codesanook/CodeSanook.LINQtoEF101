@@ -1,12 +1,17 @@
-﻿using System;
+using CodeSanook.StackOverflowEFQuery.ConsoleApp.Models;
+using System;
+using System.Linq;
 
 namespace CodeSanook.StackOverflowEFQuery.ConsoleApp
 {
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            using (var db = new StackOverflowDbContext())
+            {
+                Console.WriteLine($"post counts {db.Posts.Count()}");
+            }
         }
     }
 }

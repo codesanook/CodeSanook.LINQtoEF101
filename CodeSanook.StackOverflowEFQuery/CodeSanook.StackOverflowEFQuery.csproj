@@ -52,41 +52,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Badge.cs" />
-    <Compile Include="CloseAsOffTopicReasonType.cs" />
-    <Compile Include="CloseReasonType.cs" />
-    <Compile Include="Comment.cs" />
-    <Compile Include="FlagType.cs" />
-    <Compile Include="PendingFlag.cs" />
-    <Compile Include="Post.cs" />
-    <Compile Include="PostFeedback.cs" />
-    <Compile Include="PostHistory.cs" />
-    <Compile Include="PostHistoryType.cs" />
-    <Compile Include="PostLink.cs" />
-    <Compile Include="PostNotice.cs" />
-    <Compile Include="PostNoticeType.cs" />
-    <Compile Include="PostsWithDeleted.cs" />
-    <Compile Include="PostType.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ReviewRejectionReason.cs" />
-    <Compile Include="ReviewTask.cs" />
-    <Compile Include="ReviewTaskResult.cs" />
-    <Compile Include="ReviewTaskResultType.cs" />
-    <Compile Include="ReviewTaskState.cs" />
-    <Compile Include="ReviewTaskType.cs" />
-    <Compile Include="StackOverflowDbContext.cs" />
-    <Compile Include="SuggestedEdit.cs" />
-    <Compile Include="SuggestedEditVote.cs" />
-    <Compile Include="Tag.cs" />
-    <Compile Include="TagSynonym.cs" />
-    <Compile Include="User.cs" />
-    <Compile Include="Vote.cs" />
-    <Compile Include="VoteType.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
