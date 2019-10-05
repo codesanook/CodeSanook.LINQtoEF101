@@ -16,7 +16,8 @@ namespace CodeSanook.StackOverflowEFQuery.ConsoleApp.Models
                 .UseLoggerFactory(loggerFactory)
                 .EnableSensitiveDataLogging()
                 .UseSqlServer(
-                    @"data source=.\;initial catalog=StackOverflow;integrated security=True;"
+                    @"data source=.\;initial catalog=StackOverflow;integrated security=True;",
+                    c => c.UseRelationalNulls(true)
                 );
         }
 
@@ -44,6 +45,7 @@ namespace CodeSanook.StackOverflowEFQuery.ConsoleApp.Models
         public virtual DbSet<SuggestedEdit> SuggestedEdits { get; set; }
         public virtual DbSet<SuggestedEditVote> SuggestedEditVotes { get; set; }
         public virtual DbSet<Tag> Tags { get; set; }
+        public virtual DbSet<PostTag> PostTags { get; set; }
         public virtual DbSet<TagSynonym> TagSynonyms { get; set; }
         public virtual DbSet<User> Users { get; set; }
         public virtual DbSet<Vote> Votes { get; set; }
