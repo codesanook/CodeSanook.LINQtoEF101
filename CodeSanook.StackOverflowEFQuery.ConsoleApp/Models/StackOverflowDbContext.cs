@@ -1,13 +1,23 @@
+using CodeSanook.StackOverflowEFQuery.ConsoleApp.Logging;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace CodeSanook.StackOverflowEFQuery.ConsoleApp.Models
 {
     public class StackOverflowDbContext : DbContext
     {
+        private static ILoggerFactory loggerFactory;
+
+        static StackOverflowDbContext() => loggerFactory = new LoggerFactory().AddLog4Net();
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer(
-              @"data source=.\;initial catalog=StackOverflow;integrated security=True;");
+            optionsBuilder
+                .UseLoggerFactory(loggerFactory)
+                .EnableSensitiveDataLogging()
+                .UseSqlServer(
+                    @"data source=.\;initial catalog=StackOverflow;integrated security=True;"
+                );
         }
 
         public virtual DbSet<Badge> Badges { get; set; }
