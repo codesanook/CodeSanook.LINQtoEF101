@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+ <PropertyGroup>
+  <OutputType>Exe</OutputType>
+  <TargetFramework>netcoreapp3.0</TargetFramework>
+  <StartupObject>Codesanook.LinqToEF101.Program</StartupObject>
+ </PropertyGroup>
+
+ <ItemGroup>
+  <PackageReference Include="log4net" Version="2.0.8" />
+  <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" />
+  <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.0.0" />
+  <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.0.0" />
+  <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.6.0" />
+  <PackageReference Include="Terminal.Gui" Version="0.24.0" />
+ </ItemGroup>
+
+ <ItemGroup>
+   <None Update="log4net.config">
+     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+   </None>
+ </ItemGroup>
+
+</Project>
