@@ -6,6 +6,10 @@ using Codesanook.LinqToEF101.Components;
 using Terminal.Gui;
 /*
 https://www.interfacett.com/blogs/understanding-isolation-levels-sql-server-2008-r2-2012-examples/
+https://en.wikipedia.org/wiki/Isolation_(database_systems)
+https://docs.microsoft.com/en-us/sql/odbc/reference/develop-app/transaction-isolation-levels?view=sql-server-ver15
+https://www.mssqltips.com/sqlservertip/2977/demonstrations-of-transaction-isolation-levels-in-sql-server/
+https://www.sqlservercentral.com/articles/isolation-levels-in-sql-server
  */
 namespace Codesanook.LinqToEF101
 {
