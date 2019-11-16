@@ -8,12 +8,10 @@ namespace Codesanook.LinqToEF101
 {
     public class Program
     {
-        private static TextView textView;
-        private static TextView textView2;
-
         public static void Main(string[] args)
         {
             Application.Init();
+            Application.Current.Width = Dim.Fill();
             Application.Top.Add(new MainWindow());
             Application.Run();
 
@@ -42,12 +40,6 @@ namespace Codesanook.LinqToEF101
                 }
 
             }
-        }
-
-        private static void click()
-        {
-            Console.WriteLine(textView.Text);
-            textView2.Text = textView.Text;
         }
     }
 }

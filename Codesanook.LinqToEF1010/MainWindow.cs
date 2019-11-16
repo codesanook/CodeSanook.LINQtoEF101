@@ -1,123 +1,141 @@
-using System;
-using System.Collections.Generic;
-using System.Configuration;
 using System.Data;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Data.SqlClient;
-using NStack;
+using Codesanook.LinqToEF101.Components;
 using Terminal.Gui;
 
 namespace Codesanook.LinqToEF101
 {
     public class MainWindow : Window
     {
-        private TextView textView1;
-        private TextView textView2;
-        private Button button;
+        private readonly Panel leftPanel;
+        private readonly Panel rightPanel;
 
-        public MainWindow() : base("testxx")
+        public MainWindow() : base("Codesanook")
         {
             X = 0;
-            Y = 1; // Leave one row for the toplevel menu
-            //// By using Dim.Fill(), it will automatically resize without manual intervention
+            Y = 0; // Leave one row for the toplevel menu
             Width = Dim.Fill();
             Height = Dim.Fill();
 
-            var menu = new MenuBar(new MenuBarItem[] {
-            new MenuBarItem ("_File", new MenuItem [] {
-                    new MenuItem ("_Quit", "", () => {
-                        Application.RequestStop ();
-                    })
-                }),
-            });
-
-            textView1 = new TextView
+            var topContainer = new View()
             {
-                X = Pos.Center(),
-                Y = Pos.At(5),
+                X = 0,
+                Y = 0,
                 Width = Dim.Fill(),
-                Height = 3,
-                Text = "OKay\nokay"
+                Height = Dim.Percent(80),
             };
 
-            textView2 = new TextView
+            var bottomContainer = new View()
             {
-                X = Pos.Center(),
-                Y = Pos.Bottom(textView1) + 5,
+                X = 0,
+                Y = Pos.Bottom(topContainer),
                 Width = Dim.Fill(),
-                Height = 3,
-                Text = "OKay2\nokay"
+                Height = Dim.Fill()
             };
 
-            button = new Button(10, 20, "ok");
-            button.Clicked = clickAsync;
+            var leftContainer = new View()
+            {
+                X = 0,
+                Y = 0,
+                Width = Dim.Percent(50),
+                Height = Dim.Fill(),
+            };
 
-            this.Add(textView1, textView2, button);
+            leftPanel = new Panel("Left Panel");
+            leftContainer.Add(leftPanel);
 
+            var rightContainer = new View()
+            {
+                X = Pos.Right(leftContainer),// Read as "position at right of left container"
+                Y = 0,
+                Width = Dim.Fill(), //fill of left area
+                Height = Dim.Fill(),
+            };
 
+            rightPanel = new Panel("right Panel");
+            rightContainer.Add(rightPanel);
+
+            topContainer.Add(leftContainer, rightContainer);
+
+            var button = new Button("ok")
+            {
+                X = Pos.Center(),
+                Y = Pos.Center(),
+            };
+            bottomContainer.Add(button);
+
+            Add(topContainer, bottomContainer);
+            button.Clicked = ClickAsync;
         }
 
-        private void clickAsync() => Task.Run(async () =>
+        private void ClickAsync() => Task.Run(async () =>
         {
-            var output1 = new StringBuilder();
-            var output2 = new StringBuilder();
-
-            var task1 = ExecuteTransaction(
-                IsolationLevel.ReadCommitted,
-                (query) =>
-                {
-                    Application.MainLoop.Invoke(() =>
-                    {
-                        output1.AppendLine(query);
-                        textView1.Text = output1.ToString();
-                    });
-                },
-                "UPDATE StudentMarks SET marksObtained = 90 WHERE deptId = 101 AND examId = 201",
-                "UPDATE Exam SET examDesc = 'Theory Paper and Lab Assignmnet in Data Structure' WHERE examId = 201",
-                "UPDATE StudentMarks SET marksObtained = 70 --80 WHERE deptId = 101 AND examId = 201"
-            );
-
-            var task2 = Task.Run(async () =>
-            {
-                await Task.Delay(500);
-                await ExecuteTransaction(
-                    IsolationLevel.ReadCommitted,
-                    (query) =>
-                    {
-                        Application.MainLoop.Invoke(() =>
-                        {
-                            output2.AppendLine(query);
-                            textView2.Text = output2.ToString();
-                        });
-                    },
-                    "SELECT marksObtained FROM StudentMarks WHERE deptId = 101 AND examId = 201 AND studentId = 1"
-                );
-            });
-
-            await Task.WhenAll(task1, task2);
+            await Task.WhenAll(RunFirstTransaction(), RunSecondTransaction());
+            await RunThirdTransaction();
         });
 
-        private async Task ExecuteTransaction(IsolationLevel isolationLevel, Action<string> action, params string[] queries)
+        private Task RunFirstTransaction()
         {
-            using var connection = new SqlConnection(
-                ConfigurationManager.ConnectionStrings["defaultConnectionString"].ConnectionString
-            );
-
-            await connection.OpenAsync();
-            using var transaction = await connection.BeginTransactionAsync(isolationLevel);
-
-            foreach (var query in queries)
+            var commands = new[]
             {
-                var command = new SqlCommand(query, connection, (SqlTransaction)transaction);
-                await Task.Delay(1000);
-                await command.ExecuteNonQueryAsync();
-                action(query);
-            }
-            transaction.Commit();
+                new SqlCommandExecuteNonQuery("UPDATE Employees SET Salary = 25000 WHERE Id = 1", 0, 5000)
+            };
+
+            var transactionExecutor = new TransactionExecutor(IsolationLevel.ReadCommitted, isRollback: true);
+            transactionExecutor.OnExecuting = query => leftPanel.AppendText($"Executing: ${query}");
+            transactionExecutor.OnExecuted = (query, result) =>
+            {
+                leftPanel.AppendText($"Executed: ${query}");
+                leftPanel.AppendText(result);
+            };
+
+            return transactionExecutor.Execute(commands);
         }
 
+        private Task RunSecondTransaction()
+        {
+            var commands = new[]
+            {
+               new SqlCommandExecuteReader(@"SELECT Id, FirstName, Salary FROM EMPLOYEES", 1000)
+            };
 
+            var transactionExecutor = new TransactionExecutor(IsolationLevel.ReadUncommitted);
+            transactionExecutor.OnExecuting = query =>
+            {
+                rightPanel.AppendText($"Executing: ${query}");
+            };
+
+            transactionExecutor.OnExecuted = (query, result) =>
+            {
+                rightPanel.AppendText($"Executed: ${query}");
+                rightPanel.AppendText(result);
+            };
+
+            return transactionExecutor.Execute(commands);
+        }
+
+        private Task RunThirdTransaction()
+        {
+            var commands = new[]
+            {
+               new SqlCommandExecuteReader(@"SELECT Id, FirstName, Salary FROM EMPLOYEES", 1000)
+            };
+
+            var transactionExecutor = new TransactionExecutor(IsolationLevel.ReadCommitted);
+            transactionExecutor.OnExecuting = query =>
+            {
+                leftPanel.AppendText("");
+                leftPanel.AppendText("");
+                leftPanel.AppendText($"Executing after rollback: ${query}");
+            };
+
+            transactionExecutor.OnExecuted = (query, result) =>
+            {
+                leftPanel.AppendText($"Executed after rollback: ${query}");
+                leftPanel.AppendText(result);
+            };
+
+            return transactionExecutor.Execute(commands);
+        }
     }
 }
