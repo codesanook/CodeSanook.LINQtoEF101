@@ -15,7 +15,8 @@ namespace Codesanook.LinqToEF101.Components
                 X = Pos.At(0),
                 Y = Pos.At(0),
                 Width = Dim.Fill(),
-                Height = Dim.Fill(),
+                Height = Dim.Fill(), 
+                ReadOnly = true
             };
             this.Add(textView);
         }

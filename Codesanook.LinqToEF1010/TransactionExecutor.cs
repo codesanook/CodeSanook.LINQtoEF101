@@ -10,20 +10,20 @@ namespace Codesanook.LinqToEF101
     public class TransactionExecutor
     {
         private readonly IsolationLevel isolationLevel;
-        private readonly bool isRollback;
+        private readonly bool isCommitted;
         private readonly string connectionString;
 
         public Action<string> OnExecuting { get; set; }
         public Action<string, string> OnExecuted { get; set; }
 
-        public TransactionExecutor(IsolationLevel isolationLevel, bool isRollback = false)
+        public TransactionExecutor(IsolationLevel isolationLevel, bool isCommitted)
         {
             this.isolationLevel = isolationLevel;
-            this.isRollback = isRollback;
+            this.isCommitted = isCommitted;
             connectionString = ConfigurationManager.ConnectionStrings["defaultConnectionString"].ConnectionString;
         }
 
-        public async Task Execute(params SqlCommandBase[] commands)
+        public async Task ExecuteAsync(params SqlCommandBase[] commands)
         {
             using var connection = new SqlConnection(connectionString);
             await connection.OpenAsync();
@@ -57,13 +57,13 @@ namespace Codesanook.LinqToEF101
                     });
                 }
             }
-            if (isRollback)
+            if (isCommitted)
             {
-                transaction.Rollback();
+                transaction.Commit();
             }
             else
             {
-                transaction.Commit();
+                transaction.Rollback();
             }
         }
     }

@@ -1,19 +1,24 @@
+using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
 using Codesanook.LinqToEF101.Components;
 using Terminal.Gui;
-
+/*
+https://www.interfacett.com/blogs/understanding-isolation-levels-sql-server-2008-r2-2012-examples/
+ */
 namespace Codesanook.LinqToEF101
 {
     public class MainWindow : Window
     {
         private readonly Panel leftPanel;
         private readonly Panel rightPanel;
+        private readonly RadioGroup radioGroup;
 
         public MainWindow() : base("Codesanook")
         {
             X = 0;
-            Y = 0; // Leave one row for the toplevel menu
+            Y = 0;
             Width = Dim.Fill();
             Height = Dim.Fill();
 
@@ -22,13 +27,21 @@ namespace Codesanook.LinqToEF101
                 X = 0,
                 Y = 0,
                 Width = Dim.Fill(),
+                Height = Dim.Percent(25),
+            };
+
+            var middleContainer = new View()
+            {
+                X = 0,
+                Y = Pos.Bottom(topContainer),
+                Width = Dim.Fill(),
                 Height = Dim.Percent(80),
             };
 
             var bottomContainer = new View()
             {
                 X = 0,
-                Y = Pos.Bottom(topContainer),
+                Y = Pos.Bottom(middleContainer),
                 Width = Dim.Fill(),
                 Height = Dim.Fill()
             };
@@ -55,7 +68,7 @@ namespace Codesanook.LinqToEF101
             rightPanel = new Panel("right Panel");
             rightContainer.Add(rightPanel);
 
-            topContainer.Add(leftContainer, rightContainer);
+            middleContainer.Add(leftContainer, rightContainer);
 
             var button = new Button("ok")
             {
@@ -64,78 +77,341 @@ namespace Codesanook.LinqToEF101
             };
             bottomContainer.Add(button);
 
-            Add(topContainer, bottomContainer);
+            //https://github.com/migueldeicaza/gui.cs/blob/master/Terminal.Gui/Views/RadioGroup.cs
+            radioGroup = new RadioGroup(0, 0, new[] {
+                "Read Uncommited",
+                "Read Committed",
+                "Non Repeatable Read",
+                "Repeatable Read",
+                "Phantom New Row",
+                "Serializable",
+                "Snapshot",
+                "Read Committed Snapshot",
+            });
+
+            topContainer.Add(radioGroup);
+            Add(topContainer, middleContainer, bottomContainer);
             button.Clicked = ClickAsync;
         }
 
-        private void ClickAsync() => Task.Run(async () =>
+        private void ClickAsync()
         {
-            await Task.WhenAll(RunFirstTransaction(), RunSecondTransaction());
-            await RunThirdTransaction();
-        });
-
-        private Task RunFirstTransaction()
-        {
-            var commands = new[]
+            var task = Task.Run(async () =>
             {
-                new SqlCommandExecuteNonQuery("UPDATE Employees SET Salary = 25000 WHERE Id = 1", 0, 5000)
-            };
+                switch (radioGroup.Selected)
+                {
+                    case 0:
+                        foreach (var task in ReadUncommitted())
+                        {
+                            await task;
+                        }
+                        break;
+                    case 1:
+                        foreach (var task in ReadCommitted())
+                        {
+                            await task;
+                        }
+                        break;
+                    case 2:
+                        foreach (var task in NonRepeatableRead())
+                        {
+                            await task;
+                        }
+                        break;
+                    case 3:
+                        foreach (var task in RepeatableRead())
+                        {
+                            await task;
+                        }
+                        break;
+                    case 4:
+                        foreach (var task in PhantomRow())
+                        {
+                            await task;
+                        }
+                        break;
+                    case 5:
+                        foreach (var task in Serealizable())
+                        {
+                            await task;
+                        }
+                        break;
+                    case 6:
+                        foreach (var task in Snapshot())
+                        {
+                            await task;
+                        }
+                        break;
+                    case 7:
+                        foreach (var task in ReadCommittedSnapshot())
+                        {
+                            await task;
+                        }
+                        break;
+                }
+            });
 
-            var transactionExecutor = new TransactionExecutor(IsolationLevel.ReadCommitted, isRollback: true);
-            transactionExecutor.OnExecuting = query => leftPanel.AppendText($"Executing: ${query}");
-            transactionExecutor.OnExecuted = (query, result) =>
+            task.ContinueWith(t =>
             {
-                leftPanel.AppendText($"Executed: ${query}");
-                leftPanel.AppendText(result);
-            };
+                if (t.IsFaulted)
+                {
+                    Application.MainLoop.Invoke(() => 
+                        leftPanel.AppendText($"exception: {t.Exception.Message}"));
+                }
 
-            return transactionExecutor.Execute(commands);
+                if (t.IsCompleted)
+                {
+                    //optionally do some work);
+                }
+            });
         }
 
-        private Task RunSecondTransaction()
+        private IEnumerable<Task> ReadCommittedSnapshot()
         {
-            var commands = new[]
-            {
-               new SqlCommandExecuteReader(@"SELECT Id, FirstName, Salary FROM EMPLOYEES", 1000)
-            };
-
-            var transactionExecutor = new TransactionExecutor(IsolationLevel.ReadUncommitted);
-            transactionExecutor.OnExecuting = query =>
-            {
-                rightPanel.AppendText($"Executing: ${query}");
-            };
-
-            transactionExecutor.OnExecuted = (query, result) =>
-            {
-                rightPanel.AppendText($"Executed: ${query}");
-                rightPanel.AppendText(result);
-            };
-
-            return transactionExecutor.Execute(commands);
+            return ExecuteTransaction(new[] {
+                (
+                    new SqlCommandSet(
+                        IsolationLevel.ReadCommitted,
+                        isCommitted: true,
+                        new SqlCommandExecuteReader(@"SELECT Id, FirstName, Salary FROM EMPLOYEES", 1000),
+                        new SqlCommandExecuteReader(@"SELECT Id, FirstName, Salary FROM EMPLOYEES", 1000),
+                        new SqlCommandExecuteNonQuery("UPDATE Employees SET Salary = 9000 WHERE Id = 1", 2000)
+                    ),
+                    new SqlCommandSet(
+                        IsolationLevel.ReadCommitted,
+                        isCommitted: true,
+                        new SqlCommandExecuteNonQuery("UPDATE Employees SET Salary = 25000 WHERE Id = 1", 500, 1000)
+                    )
+                ),
+                (
+                    new SqlCommandSet(
+                        IsolationLevel.ReadCommitted,
+                        isCommitted: true,
+                        new SqlCommandExecuteReader(@"SELECT Id, FirstName, Salary FROM EMPLOYEES")
+                    ),
+                    null
+                )
+            });
         }
 
-        private Task RunThirdTransaction()
+        private IEnumerable<Task> Snapshot()
         {
-            var commands = new[]
-            {
-               new SqlCommandExecuteReader(@"SELECT Id, FirstName, Salary FROM EMPLOYEES", 1000)
-            };
+            return ExecuteTransaction(new[] {
+                (
+                    new SqlCommandSet(
+                        IsolationLevel.Snapshot,
+                        isCommitted: true,
+                        new SqlCommandExecuteReader(@"SELECT Id, FirstName, Salary FROM EMPLOYEES", 1000),
+                        new SqlCommandExecuteReader(@"SELECT Id, FirstName, Salary FROM EMPLOYEES", 1000),
+                        new SqlCommandExecuteNonQuery("UPDATE Employees SET Salary = 9000 WHERE Id = 1", 2000)
+                    ),
+                    new SqlCommandSet(
+                        IsolationLevel.ReadCommitted,
+                        isCommitted: true,
+                        new SqlCommandExecuteNonQuery("UPDATE Employees SET Salary = 25000 WHERE Id = 1", 500, 1000)
+                    )
+                ),
+                (
+                    new SqlCommandSet(
+                        IsolationLevel.ReadCommitted,
+                        isCommitted: true,
+                        new SqlCommandExecuteReader(@"SELECT Id, FirstName, Salary FROM EMPLOYEES")
+                    ),
+                    null
+                )
+            });
+        }
 
-            var transactionExecutor = new TransactionExecutor(IsolationLevel.ReadCommitted);
-            transactionExecutor.OnExecuting = query =>
-            {
-                leftPanel.AppendText("");
-                leftPanel.AppendText("");
-                leftPanel.AppendText($"Executing after rollback: ${query}");
-            };
+        private IEnumerable<Task> Serealizable()
+        {
+            return ExecuteTransaction(new[] {
+                (
+                    new SqlCommandSet(
+                        IsolationLevel.Serializable,
+                        isCommitted: true,
+                        new SqlCommandExecuteReader(@"SELECT Id, FirstName, Salary FROM EMPLOYEES"),
+                        new SqlCommandExecuteReader(@"SELECT Id, FirstName, Salary FROM EMPLOYEES", 2000)
+                    ),
+                    new SqlCommandSet(
+                        IsolationLevel.ReadCommitted,
+                        isCommitted: true,
+                        new SqlCommandExecuteNonQuery(
+                            $"INSERT INTO Employees VALUES ('pong{new Random().Next(0, 1000)}@example.com', 'Pong', 'Codesanook', '1984-07-20', 9000)",
+                            500
+                        )
+                    )
+                ),
+            });
+        }
 
+        private IEnumerable<Task> PhantomRow()
+        {
+            return ExecuteTransaction(new[] {
+                (
+                    new SqlCommandSet(
+                        IsolationLevel.RepeatableRead,
+                        isCommitted: true,
+                        new SqlCommandExecuteReader(@"SELECT Id, FirstName, Salary FROM EMPLOYEES"),
+                        new SqlCommandExecuteReader(@"SELECT Id, FirstName, Salary FROM EMPLOYEES", 2000)
+                    ),
+                    new SqlCommandSet(
+                        IsolationLevel.ReadCommitted,
+                        isCommitted: true,
+                        new SqlCommandExecuteNonQuery(
+                            $"INSERT INTO Employees VALUES ('pong{new Random().Next(0, 1000)}@example.com', 'Pong', 'Codesanook', '1984-07-20', 9000)",
+                            500
+                        )
+                    )
+                ),
+            });
+        }
+
+        private IEnumerable<Task> RepeatableRead()
+        {
+            return ExecuteTransaction(new[] {
+                (
+                    new SqlCommandSet(
+                        IsolationLevel.RepeatableRead,
+                        isCommitted: true,
+                        new SqlCommandExecuteReader(@"SELECT Id, FirstName, Salary FROM EMPLOYEES"),
+                        new SqlCommandExecuteReader(@"SELECT Id, FirstName, Salary FROM EMPLOYEES", 2000)
+                    ),
+                    new SqlCommandSet(
+                        IsolationLevel.ReadCommitted,
+                        isCommitted: true,
+                        new SqlCommandExecuteNonQuery("UPDATE Employees SET Salary = 9000 WHERE Id = 1", 500, 0)
+                    )
+                ),
+            });
+        }
+
+        private IEnumerable<Task> NonRepeatableRead()
+        {
+            return ExecuteTransaction(new[] {
+                (
+                    new SqlCommandSet(
+                        IsolationLevel.ReadCommitted,
+                        isCommitted: true,
+                        new SqlCommandExecuteReader(@"SELECT Id, FirstName, Salary FROM EMPLOYEES"),
+                        new SqlCommandExecuteReader(@"SELECT Id, FirstName, Salary FROM EMPLOYEES", 2000)
+                    ),
+                    new SqlCommandSet(
+                        IsolationLevel.ReadUncommitted,
+                        isCommitted: true,
+                        new SqlCommandExecuteNonQuery("UPDATE Employees SET Salary = 25000 WHERE Id = 1", 500, 0)
+                    )
+                ),
+            });
+        }
+
+        private IEnumerable<Task> ReadUncommitted()
+        {
+            return ExecuteTransaction(new[] {
+                (
+                    new SqlCommandSet(
+                        IsolationLevel.ReadCommitted,
+                        isCommitted: false,
+                        new SqlCommandExecuteNonQuery("UPDATE Employees SET Salary = 25000 WHERE Id = 1", 0, 5000)
+                    ),
+                    new SqlCommandSet(
+                        IsolationLevel.ReadUncommitted,
+                        isCommitted: true,
+                        new SqlCommandExecuteReader(@"SELECT Id, FirstName, Salary FROM EMPLOYEES", 500)
+                    )
+                ),
+                (
+                    new SqlCommandSet(
+                        IsolationLevel.ReadCommitted,
+                        isCommitted: true,
+                        new SqlCommandExecuteReader(@"SELECT Id, FirstName, Salary FROM EMPLOYEES", 1000)
+                    ),
+                    null
+                ),
+            });
+        }
+
+        private IEnumerable<Task> ReadCommitted()
+        {
+            return ExecuteTransaction(new[] {
+                (
+                    new SqlCommandSet(
+                        IsolationLevel.ReadCommitted,
+                        isCommitted: false,
+                        new SqlCommandExecuteNonQuery("UPDATE Employees SET Salary = 25000 WHERE Id = 1", 0, 5000)
+                    ),
+                    new SqlCommandSet(
+                        IsolationLevel.ReadCommitted,
+                        isCommitted: true,
+                        new SqlCommandExecuteReader(@"SELECT Id, FirstName, Salary FROM EMPLOYEES", 500)
+                    )
+                ),
+                (
+                    new SqlCommandSet(
+                        IsolationLevel.ReadCommitted,
+                        isCommitted: true,
+                        new SqlCommandExecuteReader(@"SELECT Id, FirstName, Salary FROM EMPLOYEES")
+                    ),
+                    null
+                )
+            });
+        }
+
+
+        private IEnumerable<Task> ExecuteTransaction(
+            IReadOnlyCollection<(SqlCommandSet CommandsForFirstTransaction, SqlCommandSet CommandsForSecondTransaction)>
+            sqlCommandTransactionPair
+        )
+        {
+            if (sqlCommandTransactionPair is null)
+            {
+                throw new ArgumentNullException(nameof(sqlCommandTransactionPair));
+            }
+
+            foreach (var command in sqlCommandTransactionPair)
+            {
+                var tasks = new List<Task>();
+                if (command.CommandsForFirstTransaction != null)
+                {
+                    tasks.Add(CreateTransactionTask(
+                        command.CommandsForFirstTransaction.Commands,
+                        command.CommandsForFirstTransaction.IsolationLevel,
+                        command.CommandsForFirstTransaction.IsCommitted,
+                        leftPanel
+                    ));
+                }
+                if (command.CommandsForSecondTransaction != null)
+                {
+                    tasks.Add(CreateTransactionTask(
+                        command.CommandsForSecondTransaction.Commands,
+                        command.CommandsForSecondTransaction.IsolationLevel,
+                        command.CommandsForSecondTransaction.IsCommitted,
+                        rightPanel
+                    ));
+                }
+                yield return Task.WhenAll(tasks);
+            }
+        }
+
+        private Task CreateTransactionTask(
+            SqlCommandBase[] commands,
+            IsolationLevel isolationLevel,
+            bool isCommitted,
+            Panel panel
+        )
+        {
+            var transactionExecutor = new TransactionExecutor(
+                isolationLevel,
+                isCommitted: isCommitted
+            );
+            transactionExecutor.OnExecuting = query => panel.AppendText($"Executing: ${query}");
             transactionExecutor.OnExecuted = (query, result) =>
             {
-                leftPanel.AppendText($"Executed after rollback: ${query}");
-                leftPanel.AppendText(result);
+                panel.AppendText($"Executed: ${query}");
+                panel.AppendText(result);
+                panel.AppendText("");
             };
 
-            return transactionExecutor.Execute(commands);
+            return transactionExecutor.ExecuteAsync(commands);
         }
     }
 }
