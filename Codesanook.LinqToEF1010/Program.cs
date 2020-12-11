@@ -23,14 +23,15 @@ namespace Codesanook.LinqToEF101
             int userId = 55;
             using (var db = new StackOverflowDbContext())
             {
-                var query = from t in db.Tags
-                            join pt in db.PostTags on t.Id equals pt.TagId
-                            join p in db.Posts on pt.PostId equals p.ParentId
-                            join v in db.Votes on new { PostId = p.Id, VoteTypeId = voteType }
-                            equals new { v.PostId, v.VoteTypeId }
-                            where p.OwnerUserId == userId
-                            group t by t.TagName into g
-                            select new { TagName = g.Key, Upvotes = g.Count() };
+                var query = 
+                    from t in db.Tags
+                    join pt in db.PostTags on t.Id equals pt.TagId
+                    join p in db.Posts on pt.PostId equals p.ParentId
+                    join v in db.Votes on new { PostId = p.Id, VoteTypeId = voteType }
+                    equals new { v.PostId, v.VoteTypeId }
+                    where p.OwnerUserId == userId
+                    group t by t.TagName into g
+                    select new { TagName = g.Key, Upvotes = g.Count() };
 
                 query = query.OrderBy(t => t.Upvotes);
 
